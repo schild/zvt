@@ -21,10 +21,7 @@ class JoinquantIndexMoneyFlowRecorder(FixedCycleDataRecorder):
                  one_day_trading_minutes=24 * 60) -> None:
         # 上证指数，深证成指，创业板指，科创板
         support_codes = ['000001', '399001', '399006', '000688']
-        if not codes:
-            codes = support_codes
-        else:
-            codes = list(set(codes) & set(support_codes))
+        codes = support_codes if not codes else list(set(codes) & set(support_codes))
         super().__init__(force_update, sleeping_time, exchanges, entity_ids, code, codes, day_data, entity_filters,
                          ignore_failed, real_time, fix_duplicate_way, start_timestamp, end_timestamp, level,
                          kdata_use_begin_time, one_day_trading_minutes)

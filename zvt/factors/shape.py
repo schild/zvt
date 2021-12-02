@@ -131,31 +131,20 @@ def handle_zhongshu(points: list, acc_df, end_index, zhongshu_col='zhongshu', zh
             # 向下段
             range = intersect((points[0][1], points[1][1]),
                               (points[2][1], points[3][1]))
-            if range:
-                y1, y2 = range
-                # 记录中枢
-                zhongshu = Rect(x0=x1, x1=x2, y0=y1, y1=y2)
-                zhongshu_change = abs(y1 - y2) / y1
-                acc_df.loc[end_index, zhongshu_col] = zhongshu
-                acc_df.loc[end_index, zhongshu_change_col] = zhongshu_change
-                points = points[-1:]
-            else:
-                points = points[1:]
         else:
             # 向上段
             range = intersect((points[1][1], points[0][1]),
                               (points[3][1], points[2][1]))
-            if range:
-                y1, y2 = range
-                # 记录中枢
-                zhongshu = Rect(x0=x1, x1=x2, y0=y1, y1=y2)
-                zhongshu_change = abs(y1 - y2) / y1
-
-                acc_df.loc[end_index, zhongshu_col] = zhongshu
-                acc_df.loc[end_index, zhongshu_change_col] = zhongshu_change
-                points = points[-1:]
-            else:
-                points = points[1:]
+        if range:
+            y1, y2 = range
+            # 记录中枢
+            zhongshu = Rect(x0=x1, x1=x2, y0=y1, y1=y2)
+            zhongshu_change = abs(y1 - y2) / y1
+            acc_df.loc[end_index, zhongshu_col] = zhongshu
+            acc_df.loc[end_index, zhongshu_change_col] = zhongshu_change
+            points = points[-1:]
+        else:
+            points = points[1:]
     return points, zhongshu, zhongshu_change, interval
 
 

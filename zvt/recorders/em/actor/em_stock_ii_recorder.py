@@ -53,7 +53,7 @@ class EMStockIIRecorder(TimestampsDataRecorder):
             the_date = to_time_str(timestamp)
             self.logger.info(f'to {entity.code} {the_date}')
             for actor_type in ActorType:
-                if actor_type == ActorType.private_equity or actor_type == ActorType.individual:
+                if actor_type in [ActorType.private_equity, ActorType.individual]:
                     continue
                 result = get_ii_holder(code=entity.code, report_date=the_date,
                                        org_type=actor_type_to_org_type(actor_type))

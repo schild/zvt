@@ -101,11 +101,7 @@ class Draw(object):
                        title=None,
                        keep_ui_state=True,
                        **layout_params):
-        if keep_ui_state:
-            uirevision = True
-        else:
-            uirevision = None
-
+        uirevision = True if keep_ui_state else None
         if main_chart == ChartType.histogram:
             xaxis = None
         else:
@@ -174,7 +170,7 @@ class Draw(object):
 class Drawable(object):
 
     def drawer(self):
-        drawer = Drawer(main_df=self.drawer_main_df(),
+        return Drawer(main_df=self.drawer_main_df(),
                         main_data=self.drawer_main_data(),
                         factor_df_list=self.drawer_factor_df_list(),
                         factor_data_list=self.drawer_factor_data_list(),
@@ -183,7 +179,6 @@ class Drawable(object):
                         sub_col_chart=self.drawer_sub_col_chart(),
                         annotation_df=self.drawer_annotation_df(),
                         rects=self.drawer_rects())
-        return drawer
 
     def draw(self,
              main_chart=ChartType.kline,
@@ -347,18 +342,14 @@ class Drawer(Draw):
 
         # 主图因子
         if not factor_data_list and factor_df_list:
-            factor_data_list = []
-            for df in factor_df_list:
-                factor_data_list.append(NormalData(df))
+            factor_data_list = [NormalData(df) for df in factor_df_list]
         # 每一个df可能有多个column, 代表多个指标，对于连续型的，可以放在一个df里面
         # 对于离散型的，比如一些特定模式的连线，放在多个df里面较好，因为index不同
         self.factor_data_list: List[NormalData] = factor_data_list
 
         # 副图数据
         if not sub_data_list and sub_df_list:
-            sub_data_list = []
-            for df in sub_df_list:
-                sub_data_list.append(NormalData(df))
+            sub_data_list = [NormalData(df) for df in sub_df_list]
         # 每一个df可能有多个column, 代表多个指标，对于连续型的，可以放在一个df里面
         # 对于离散型的，比如一些特定模式的连线，放在多个df里面较好，因为index不同
         self.sub_data_list: List[NormalData] = sub_data_list
@@ -583,38 +574,34 @@ def annotations(annotation_df: pd.DataFrame, yref='y'):
 
     """
 
-    if pd_is_not_null(annotation_df):
-        annotations = []
-        for trace_name, df in annotation_df.groupby(level=0):
-            if pd_is_not_null(df):
-                for (_, timestamp), item in df.iterrows():
-                    if 'color' in item:
-                        color = item['color']
-                    else:
-                        color = '#ec0000'
-
-                    value = round(item['value'], 2)
-                    annotations.append(dict(
-                        x=timestamp,
-                        y=value,
-                        xref='x',
-                        yref=yref,
-                        text=item['flag'],
-                        showarrow=True,
-                        align='center',
-                        arrowhead=2,
-                        arrowsize=1,
-                        arrowwidth=2,
-                        # arrowcolor='#030813',
-                        ax=-10,
-                        ay=-30,
-                        bordercolor='#c7c7c7',
-                        borderwidth=1,
-                        bgcolor=color,
-                        opacity=0.8
-                    ))
-        return annotations
-    return None
+    if not pd_is_not_null(annotation_df):
+        return None
+    annotations = []
+    for trace_name, df in annotation_df.groupby(level=0):
+        if pd_is_not_null(df):
+            for (_, timestamp), item in df.iterrows():
+                color = item['color'] if 'color' in item else '#ec0000'
+                value = round(item['value'], 2)
+                annotations.append(dict(
+                    x=timestamp,
+                    y=value,
+                    xref='x',
+                    yref=yref,
+                    text=item['flag'],
+                    showarrow=True,
+                    align='center',
+                    arrowhead=2,
+                    arrowsize=1,
+                    arrowwidth=2,
+                    # arrowcolor='#030813',
+                    ax=-10,
+                    ay=-30,
+                    bordercolor='#c7c7c7',
+                    borderwidth=1,
+                    bgcolor=color,
+                    opacity=0.8
+                ))
+    return annotations
 
 
 if __name__ == '__main__':

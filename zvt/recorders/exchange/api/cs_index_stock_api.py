@@ -16,9 +16,7 @@ url = 'http://www.csindex.com.cn/uploads/file/autofile/cons/{}cons.xls'
 
 
 def get_cs_index_stock(code, timestamp, name=None):
-    entity_type = 'index'
-    exchange = 'sh'
-    entity_id = f'{entity_type}_{exchange}_{code}'
+    entity_id = f'index_sh_{code}'
 
     response = requests.get(url.format(code), headers=DEFAULT_HEADER)
     response.raise_for_status()

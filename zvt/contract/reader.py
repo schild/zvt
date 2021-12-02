@@ -82,13 +82,12 @@ class DataReader(Drawable):
 
         self.exchanges = exchanges
 
-        if codes:
-            if type(codes) == str:
-                codes = codes.replace(' ', '')
-                if codes.startswith('[') and codes.endswith(']'):
-                    codes = json.loads(codes)
-                else:
-                    codes = codes.split(',')
+        if codes and type(codes) == str:
+            codes = codes.replace(' ', '')
+            if codes.startswith('[') and codes.endswith(']'):
+                codes = json.loads(codes)
+            else:
+                codes = codes.split(',')
 
         self.codes = codes
         self.entity_ids = entity_ids
@@ -104,11 +103,7 @@ class DataReader(Drawable):
         self.order = order
         self.limit = limit
 
-        if level:
-            self.level = IntervalLevel(level)
-        else:
-            self.level = level
-
+        self.level = IntervalLevel(level) if level else level
         self.category_field = category_field
         self.time_field = time_field
         self.computing_window = computing_window
@@ -213,11 +208,7 @@ class DataReader(Drawable):
                     df = df.iloc[-self.computing_window:]
 
                 added_filter = [self.category_col == entity_id, self.time_col > recorded_timestamp]
-                if self.filters:
-                    filters = self.filters + added_filter
-                else:
-                    filters = added_filter
-
+                filters = self.filters + added_filter if self.filters else added_filter
                 added_df = self.data_schema.query_data(provider=self.provider,
                                                        columns=self.columns,
                                                        end_timestamp=to_timestamp, filters=filters, level=self.level,

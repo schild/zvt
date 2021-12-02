@@ -19,7 +19,7 @@ class FollowIITrader(StockTrader):
                    StockActorSummary.report_date == recent_report_date]
 
         if self.entity_ids:
-            filters = filters + [StockActorSummary.entity_id.in_(self.entity_ids)]
+            filters += [StockActorSummary.entity_id.in_(self.entity_ids)]
 
         df = StockActorSummary.query_data(filters=filters)
 

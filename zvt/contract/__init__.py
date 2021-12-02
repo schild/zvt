@@ -68,7 +68,7 @@ class IntervalLevel(Enum):
         if self == IntervalLevel.LEVEL_30MIN:
             return 30 * 60 * 1000
         if self == IntervalLevel.LEVEL_1HOUR:
-            return 60 * 60 * 1000
+            return 60**2 * 1000
         if self == IntervalLevel.LEVEL_4HOUR:
             return 4 * 60 * 60 * 1000
         if self == IntervalLevel.LEVEL_1DAY:

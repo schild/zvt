@@ -48,7 +48,9 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
         except Exception as e:
             self.fetch_jq_timestamp = False
             self.logger.warning(
-                f'joinquant account not ok,the timestamp(publish date) for finance would be not correct', e)
+                'joinquant account not ok,the timestamp(publish date) for finance would be not correct',
+                e,
+            )
 
     def init_timestamps(self, entity):
         param = {
@@ -57,7 +59,10 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
             "DataType": self.data_type
         }
 
-        if self.finance_report_type == 'LiRunBiaoList' or self.finance_report_type == 'XianJinLiuLiangBiaoList':
+        if self.finance_report_type in [
+            'LiRunBiaoList',
+            'XianJinLiuLiangBiaoList',
+        ]:
             param['ReportType'] = 1
 
         timestamp_json_list = call_eastmoney_api(url=self.timestamps_fetching_url,
@@ -91,7 +96,10 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
                 "latestCount": 10
             }
 
-        if self.finance_report_type == 'LiRunBiaoList' or self.finance_report_type == 'XianJinLiuLiangBiaoList':
+        if self.finance_report_type in [
+            'LiRunBiaoList',
+            'XianJinLiuLiangBiaoList',
+        ]:
             param['reportType'] = 1
 
         return param

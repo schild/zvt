@@ -43,10 +43,7 @@ class EmailInformer(Informer):
         msg = MIMEMultipart('alternative')
         msg['Subject'] = Header(title).encode()
         msg['From'] = "{} <{}>".format(Header('zvt').encode(), zvt_config['email_username'])
-        if type(to_user) is list:
-            msg['To'] = ", ".join(to_user)
-        else:
-            msg['To'] = to_user
+        msg['To'] = ", ".join(to_user) if type(to_user) is list else to_user
         msg['Message-id'] = email.utils.make_msgid()
         msg['Date'] = email.utils.formatdate()
 
@@ -64,7 +61,7 @@ class EmailInformer(Informer):
             if size >= sub_size:
                 step_size = int(size / sub_size)
                 if size % sub_size:
-                    step_size = step_size + 1
+                    step_size += 1
             else:
                 step_size = 1
 
@@ -110,11 +107,7 @@ class WechatInformer(Informer):
             self.logger.info("send_price_notification to user:{} data:{} success".format(to_user, the_json))
 
     def _format_price_notification(self, to_user, security_name, current_price, change_pct):
-        if change_pct > 0:
-            title = '吃肉喝汤'
-        else:
-            title = '关灯吃面'
-
+        title = '吃肉喝汤' if change_pct > 0 else '关灯吃面'
         # 先固定一个template
 
         # {
@@ -127,7 +120,7 @@ class WechatInformer(Informer):
         # }
 
         template_id = 'mkqi-L1h56mH637vLXiuS_ulLTs1byDYYgLBbSXQ65U'
-        the_json = {
+        return {
             "touser": to_user,
             "template_id": template_id,
             "url": "http://www.foolcage.com",
@@ -154,8 +147,6 @@ class WechatInformer(Informer):
                 }
             }
         }
-
-        return the_json
 
 
 if __name__ == '__main__':

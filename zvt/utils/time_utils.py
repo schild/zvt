@@ -83,8 +83,7 @@ def pre_month(t=now_pd_timestamp()):
     else:
         year = t.year - 1
         month = 12
-    last_valid_date = t.replace(year=year, month=month)
-    return last_valid_date
+    return t.replace(year=year, month=month)
 
 
 def pre_month_start_date(t=current_date()):
@@ -200,9 +199,7 @@ def evaluate_size_from_timestamp(start_timestamp,
 
 def is_finished_kdata_timestamp(timestamp, level: IntervalLevel):
     timestamp = to_pd_timestamp(timestamp)
-    if level.floor_timestamp(timestamp) == timestamp:
-        return True
-    return False
+    return level.floor_timestamp(timestamp) == timestamp
 
 
 def is_in_same_interval(t1: pd.Timestamp, t2: pd.Timestamp, level: IntervalLevel):

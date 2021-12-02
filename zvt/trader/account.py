@@ -464,175 +464,167 @@ class SimAccountService(AccountService):
 
         # 市价交易,就是买卖是"当时"并"一定"能成交的
         # 简单起见，目前只支持这种方式
-        if order_price == 0:
-            current_position = self.get_current_position(entity_id=entity_id)
+        if order_price != 0:
+            return
+        current_position = self.get_current_position(entity_id=entity_id)
 
-            if not current_position:
-                trading_t = self.entity_schema.get_trading_t()
-                current_position = Position(trader_name=self.trader_name,
-                                            entity_id=entity_id,
-                                            long_amount=0,
-                                            available_long=0,
-                                            average_long_price=0,
-                                            short_amount=0,
-                                            available_short=0,
-                                            average_short_price=0,
-                                            profit=0,
-                                            value=0,
-                                            trading_t=trading_t
-                                            )
-                # add it to latest account
-                self.account.positions.append(current_position)
+        if not current_position:
+            trading_t = self.entity_schema.get_trading_t()
+            current_position = Position(trader_name=self.trader_name,
+                                        entity_id=entity_id,
+                                        long_amount=0,
+                                        available_long=0,
+                                        average_long_price=0,
+                                        short_amount=0,
+                                        available_short=0,
+                                        average_short_price=0,
+                                        profit=0,
+                                        value=0,
+                                        trading_t=trading_t
+                                        )
+            # add it to latest account
+            self.account.positions.append(current_position)
 
             # 按钱交易
-            if order_money > 0:
-                # 开多
-                if order_type == ORDER_TYPE_LONG:
-                    if current_position.short_amount > 0:
-                        raise InvalidOrderError("close the short position before open long")
+        if order_money > 0:
+            # 开多
+            if order_type == ORDER_TYPE_LONG:
+                if current_position.short_amount > 0:
+                    raise InvalidOrderError("close the short position before open long")
 
-                    if order_money > self.account.cash:
-                        if self.rich_mode:
-                            self.input_money()
-                        else:
-                            raise NotEnoughMoneyError()
+                if order_money > self.account.cash:
+                    if self.rich_mode:
+                        self.input_money()
+                    else:
+                        raise NotEnoughMoneyError()
 
-                    cost = current_price * (1 + self.slippage + self.buy_cost)
-                    # 买的数量
-                    order_amount = order_money // cost
+                cost = current_price * (1 + self.slippage + self.buy_cost)
+                # 买的数量
+                order_amount = order_money // cost
 
-                    if order_amount < 1:
-                        self.logger.error(
-                            f'invalid order_money:{order_money}, cost:{cost}, order_amount:{order_amount}')
-                        return
+                if order_amount < 1:
+                    self.logger.error(
+                        f'invalid order_money:{order_money}, cost:{cost}, order_amount:{order_amount}')
+                    return
 
-                    self.update_position(current_position, order_amount, current_price, order_type,
-                                         current_timestamp)
-                # 开空
-                elif order_type == ORDER_TYPE_SHORT:
-                    if current_position.long_amount > 0:
-                        raise InvalidOrderError("close the long position before open short")
+                self.update_position(current_position, order_amount, current_price, order_type,
+                                     current_timestamp)
+            # 开空
+            elif order_type == ORDER_TYPE_SHORT:
+                if current_position.long_amount > 0:
+                    raise InvalidOrderError("close the long position before open short")
 
-                    if order_money > self.account.cash:
-                        if self.rich_mode:
-                            self.input_money()
-                        else:
-                            raise NotEnoughMoneyError()
+                if order_money > self.account.cash:
+                    if self.rich_mode:
+                        self.input_money()
+                    else:
+                        raise NotEnoughMoneyError()
 
-                    cost = current_price * (1 + self.slippage + self.buy_cost)
+                cost = current_price * (1 + self.slippage + self.buy_cost)
 
-                    order_amount = order_money // cost
+                order_amount = order_money // cost
 
-                    if order_amount < 1:
-                        self.logger.error(
-                            f'invalid order_money:{order_money}, cost:{cost}, order_amount:{order_amount}')
-                        return
+                if order_amount < 1:
+                    self.logger.error(
+                        f'invalid order_money:{order_money}, cost:{cost}, order_amount:{order_amount}')
+                    return
+                self.update_position(current_position, order_amount, current_price, order_type,
+                                     current_timestamp)
+            else:
+                raise InvalidOrderParamError('close long/short not support order_money')
+
+        elif order_amount > 0:
+            # 开多
+            if order_type == ORDER_TYPE_LONG:
+                if current_position.short_amount > 0:
+                    raise InvalidOrderError("close the short position before open long")
+
+                self.update_position(current_position, order_amount, current_price, order_type, current_timestamp)
+            # 开空
+            elif order_type == ORDER_TYPE_SHORT:
+                if current_position.long_amount > 0:
+                    raise InvalidOrderError("close the long position before open short")
+
+                self.update_position(current_position, order_amount, current_price, order_type, current_timestamp)
+            # 平多
+            elif order_type == ORDER_TYPE_CLOSE_LONG:
+                if current_position.available_long >= order_amount:
                     self.update_position(current_position, order_amount, current_price, order_type,
                                          current_timestamp)
                 else:
-                    raise InvalidOrderParamError('close long/short not support order_money')
-
-            # 按数量交易
-            elif order_amount > 0:
-                # 开多
-                if order_type == ORDER_TYPE_LONG:
-                    if current_position.short_amount > 0:
-                        raise InvalidOrderError("close the short position before open long")
-
-                    self.update_position(current_position, order_amount, current_price, order_type, current_timestamp)
-                # 开空
-                elif order_type == ORDER_TYPE_SHORT:
-                    if current_position.long_amount > 0:
-                        raise InvalidOrderError("close the long position before open short")
-
-                    self.update_position(current_position, order_amount, current_price, order_type, current_timestamp)
-                # 平多
-                elif order_type == ORDER_TYPE_CLOSE_LONG:
-                    if current_position.available_long >= order_amount:
-                        self.update_position(current_position, order_amount, current_price, order_type,
-                                             current_timestamp)
-                    else:
-                        raise NotEnoughPositionError()
-                # 平空
-                elif order_type == ORDER_TYPE_CLOSE_SHORT:
-                    if current_position.available_short >= order_amount:
-                        self.update_position(current_position, order_amount, current_price, order_type,
-                                             current_timestamp)
-                    else:
-                        raise Exception("not enough position")
-
-            # 按仓位比例交易
-            elif 0 < order_pct <= 1:
-                # 开多
-                if order_type == ORDER_TYPE_LONG:
-                    if current_position.short_amount > 0:
-                        raise InvalidOrderError("close the short position before open long")
-
-                    cost = current_price * (1 + self.slippage + self.buy_cost)
-                    want_pay = self.account.cash * order_pct
-                    # 买的数量
-                    order_amount = want_pay // cost
-
-                    if order_amount < 1:
-                        if self.rich_mode:
-                            self.input_money()
-                            order_amount = max((self.account.cash * order_pct) // cost, 1)
-                        else:
-                            raise NotEnoughMoneyError()
+                    raise NotEnoughPositionError()
+            # 平空
+            elif order_type == ORDER_TYPE_CLOSE_SHORT:
+                if current_position.available_short >= order_amount:
                     self.update_position(current_position, order_amount, current_price, order_type,
                                          current_timestamp)
-                # 开空
-                elif order_type == ORDER_TYPE_SHORT:
-                    if current_position.long_amount > 0:
-                        raise InvalidOrderError("close the long position before open short")
+                else:
+                    raise Exception("not enough position")
 
-                    cost = current_price * (1 + self.slippage + self.buy_cost)
-                    want_pay = self.account.cash * order_pct
+        elif 0 < order_pct <= 1:
+                # 开多
+            if order_type == ORDER_TYPE_LONG:
+                if current_position.short_amount > 0:
+                    raise InvalidOrderError("close the short position before open long")
 
-                    order_amount = want_pay // cost
+                cost = current_price * (1 + self.slippage + self.buy_cost)
+                want_pay = self.account.cash * order_pct
+                # 买的数量
+                order_amount = want_pay // cost
 
-                    if order_amount < 1:
-                        if self.rich_mode:
-                            self.input_money()
-                            order_amount = max((self.account.cash * order_pct) // cost, 1)
-                        else:
-                            raise NotEnoughMoneyError()
+                if order_amount < 1:
+                    if not self.rich_mode:
+                        raise NotEnoughMoneyError()
+                    self.input_money()
+                    order_amount = max((self.account.cash * order_pct) // cost, 1)
+                self.update_position(current_position, order_amount, current_price, order_type,
+                                     current_timestamp)
+            elif order_type == ORDER_TYPE_SHORT:
+                if current_position.long_amount > 0:
+                    raise InvalidOrderError("close the long position before open short")
 
+                cost = current_price * (1 + self.slippage + self.buy_cost)
+                want_pay = self.account.cash * order_pct
+
+                order_amount = want_pay // cost
+
+                if order_amount < 1:
+                    if not self.rich_mode:
+                        raise NotEnoughMoneyError()
+
+                    self.input_money()
+                    order_amount = max((self.account.cash * order_pct) // cost, 1)
+                self.update_position(current_position, order_amount, current_price, order_type,
+                                     current_timestamp)
+
+            elif order_type == ORDER_TYPE_CLOSE_LONG:
+                if current_position.available_long <= 0:
+                    raise NotEnoughPositionError()
+                if order_pct == 1.0:
+                    order_amount = current_position.available_long
+                else:
+                    order_amount = math.floor(current_position.available_long * order_pct)
+
+                if order_amount != 0:
                     self.update_position(current_position, order_amount, current_price, order_type,
                                          current_timestamp)
+                else:
+                    self.logger.warning(
+                        f'{entity_id} available_long:{current_position.available_long} order_pct:{order_pct} order_amount:{order_amount}')
+            elif order_type == ORDER_TYPE_CLOSE_SHORT:
+                if current_position.available_short <= 0:
+                    raise Exception("not enough position")
+                if order_pct == 1.0:
+                    order_amount = current_position.available_short
+                else:
+                    order_amount = math.floor(current_position.available_short * order_pct)
 
-                # 平多
-                elif order_type == ORDER_TYPE_CLOSE_LONG:
-                    if current_position.available_long > 0:
-                        if order_pct == 1.0:
-                            order_amount = current_position.available_long
-                        else:
-                            order_amount = math.floor(current_position.available_long * order_pct)
-
-                        if order_amount != 0:
-                            self.update_position(current_position, order_amount, current_price, order_type,
-                                                 current_timestamp)
-                        else:
-                            self.logger.warning(
-                                f'{entity_id} available_long:{current_position.available_long} order_pct:{order_pct} order_amount:{order_amount}')
-                    else:
-                        raise NotEnoughPositionError()
-                # 平空
-                elif order_type == ORDER_TYPE_CLOSE_SHORT:
-                    if current_position.available_short > 0:
-                        if order_pct == 1.0:
-                            order_amount = current_position.available_short
-                        else:
-                            order_amount = math.floor(current_position.available_short * order_pct)
-
-                        if order_amount != 0:
-                            self.update_position(current_position, order_amount, current_price, order_type,
-                                                 current_timestamp)
-                        else:
-                            self.logger.warning(
-                                f'{entity_id} available_long:{current_position.available_long} order_pct:{order_pct} order_amount:{order_amount}')
-                    else:
-                        raise Exception("not enough position")
+                if order_amount != 0:
+                    self.update_position(current_position, order_amount, current_price, order_type,
+                                         current_timestamp)
+                else:
+                    self.logger.warning(
+                        f'{entity_id} available_long:{current_position.available_long} order_pct:{order_pct} order_amount:{order_amount}')
 
 
 # the __all__ is generated

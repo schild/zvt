@@ -172,13 +172,9 @@ class Mixin(object):
                 for k in kwargs:
                     kw[k] = kwargs[k]
 
-                r = recorder_class(**kw)
-                r.run()
-                return
-            else:
-                r = recorder_class(**kw)
-                r.run()
-                return
+            r = recorder_class(**kw)
+            r.run()
+            return
         else:
             print(f'no recorders for {cls.__name__}')
 
@@ -228,10 +224,7 @@ class TradableEntity(Entity):
 
     @classmethod
     def in_trading_time(cls, timestamp=None):
-        if not timestamp:
-            timestamp = now_pd_timestamp()
-        else:
-            timestamp = pd.Timestamp(timestamp)
+        timestamp = now_pd_timestamp() if not timestamp else pd.Timestamp(timestamp)
         open_time = date_and_time(the_date=timestamp.date(), the_time=cls.get_trading_intervals()[0][0])
         close_time = date_and_time(the_date=timestamp.date(), the_time=cls.get_trading_intervals()[-1][1])
         return open_time < timestamp < close_time
@@ -295,11 +288,12 @@ class TradableEntity(Entity):
         """
         timestamp = pd.Timestamp(timestamp)
 
-        for t in cls.get_interval_timestamps(timestamp.date(), timestamp.date(), level=level):
-            if is_same_time(t, timestamp):
-                return True
-
-        return False
+        return any(
+            is_same_time(t, timestamp)
+            for t in cls.get_interval_timestamps(
+                timestamp.date(), timestamp.date(), level=level
+            )
+        )
 
     @classmethod
     def could_short(cls):

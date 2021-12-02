@@ -62,10 +62,13 @@ def report_core_company():
         except Exception as e:
             logger.exception('report_core_company error:{}'.format(e))
             time.sleep(60 * 3)
-            error_count = error_count + 1
+            error_count += 1
             if error_count == 10:
-                email_action.send_message(zvt_config['email_username'], f'report_core_company error',
-                                          'report_core_company error:{}'.format(e))
+                email_action.send_message(
+                    zvt_config['email_username'],
+                    'report_core_company error',
+                    'report_core_company error:{}'.format(e),
+                )
 
 
 if __name__ == '__main__':

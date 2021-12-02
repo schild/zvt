@@ -62,9 +62,7 @@ class SinaBlockMoneyFlowRecorder(FixedCycleDataRecorder):
             self.logger.error(resp.text)
             time.sleep(60 * 5)
 
-        result_list = []
-        for item in json_list:
-            result_list.append({
+        return [{
                 'name': entity.name,
                 'timestamp': to_pd_timestamp(item['opendate']),
                 'close': to_float(item['avg_price']),
@@ -74,9 +72,7 @@ class SinaBlockMoneyFlowRecorder(FixedCycleDataRecorder):
                 'net_inflow_rate': to_float(item['ratioamount']),
                 'net_main_inflows': to_float(item['r0_net']),
                 'net_main_inflow_rate': to_float(item['r0_ratio'])
-            })
-
-        return result_list
+            } for item in json_list]
 
 
 

@@ -35,9 +35,8 @@ def get_recent_report_date(the_date=now_pd_timestamp(), step=0):
 
     if step == 0:
         return recent
-    else:
-        step = step - 1
-        return get_recent_report_date(recent, step)
+    step = step - 1
+    return get_recent_report_date(recent, step)
 
 
 def get_recent_report_period(the_date=now_pd_timestamp(), step=0):
@@ -79,7 +78,7 @@ def get_recent_report(data_schema: Type[Mixin], timestamp, entity_id=None, filte
                                     filters=filters)
         if pd_is_not_null(df):
             return df
-        i = i + 1
+        i += 1
 
 
 # the __all__ is generated

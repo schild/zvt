@@ -61,8 +61,7 @@ def get_cn_index_stock(code, timestamp, name=None):
             'market_cap': value_multiply(result['freeMarketValue'], 100000000, 0)
         })
     if the_list:
-        df = pd.DataFrame.from_records(the_list)
-        return df
+        return pd.DataFrame.from_records(the_list)
 
 
 if __name__ == '__main__':

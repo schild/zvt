@@ -32,27 +32,25 @@ def get_portfolio_stocks(portfolio_entity=Fund, code=None, codes=None, ids=None,
         # 获取最新的报表
         df = data_schema.query_data(provider=provider, code=code, codes=codes, ids=ids, end_timestamp=timestamp,
                                     filters=[data_schema.report_date == latest_record.report_date])
-        # 最新的为年报或者半年报
-        if latest_record.report_period == ReportPeriod.year or latest_record.report_period == ReportPeriod.half_year:
+        if latest_record.report_period in [
+            ReportPeriod.year,
+            ReportPeriod.half_year,
+        ]:
             return df
-        # 季报，需要结合 年报或半年报 来算持仓
-        else:
-            step = 0
-            while step <= 20:
-                report_date = get_recent_report_date(latest_record.report_date, step=step)
+        for step in range(21):
+            report_date = get_recent_report_date(latest_record.report_date, step=step)
 
-                pre_df = data_schema.query_data(provider=provider, code=code, codes=codes, ids=ids,
-                                                end_timestamp=timestamp,
-                                                filters=[data_schema.report_date == to_pd_timestamp(report_date)])
-                df = df.append(pre_df)
+            pre_df = data_schema.query_data(provider=provider, code=code, codes=codes, ids=ids,
+                                            end_timestamp=timestamp,
+                                            filters=[data_schema.report_date == to_pd_timestamp(report_date)])
+            df = df.append(pre_df)
 
-                # 半年报和年报
-                if (ReportPeriod.half_year.value in pre_df['report_period'].tolist()) or (
-                        ReportPeriod.year.value in pre_df['report_period'].tolist()):
-                    # 保留最新的持仓
-                    df = df.drop_duplicates(subset=['stock_code'], keep='first')
-                    return df
-                step = step + 1
+            # 半年报和年报
+            if (ReportPeriod.half_year.value in pre_df['report_period'].tolist()) or (
+                    ReportPeriod.year.value in pre_df['report_period'].tolist()):
+                # 保留最新的持仓
+                df = df.drop_duplicates(subset=['stock_code'], keep='first')
+                return df
 
 
 def get_etf_stocks(code=None, codes=None, ids=None, timestamp=now_pd_timestamp(), provider=None):

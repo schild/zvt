@@ -20,7 +20,7 @@ class ApiWrapper(object):
 def get_fc(security_item):
     if security_item.exchange == 'sh':
         fc = "{}01".format(security_item.code)
-    if security_item.exchange == 'sz':
+    elif security_item.exchange == 'sz':
         fc = "{}02".format(security_item.code)
 
     return fc

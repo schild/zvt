@@ -32,8 +32,6 @@ def list_all_files(dir_path: str = './domain',
                     files.append(os.path.basename(entry.path))
                 else:
                     files.append(entry.path)
-        else:
-            pass
     return files
 
 

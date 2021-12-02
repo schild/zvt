@@ -66,10 +66,7 @@ def get_url(type, sty, filters, order_by='', order='asc', pn=1, ps=2000):
     # filter=(SECUCODE="000338.SZ")(REPORT_DATE=\'2021-03-31\')(ORG_TYPE="01")
     # sr=1
     # st=
-    if order == 'asc':
-        sr = 1
-    else:
-        sr = -1
+    sr = 1 if order == 'asc' else -1
     v = random.randint(1000000000000000, 9000000000000000)
     return f'https://datacenter.eastmoney.com/securities/api/data/get?type={type}&sty={sty}&filter={filters}&client=APP&source=SECURITIES&p={pn}&ps={ps}&sr={sr}&st={order_by}&v=0{v}'
 
@@ -124,7 +121,7 @@ def get_em_data(request_type, fields, filters, sort_by='', sort='asc', pn=1, ps=
                 next_data = get_em_data(request_type=request_type, fields=fields, filters=filters, sort_by=sort_by,
                                         sort=sort, pn=pn + 1, ps=ps)
                 if next_data:
-                    data = data + next_data
+                    data += next_data
                     return data
             else:
                 return data
@@ -218,8 +215,7 @@ def get_kdata(entity_id, level=IntervalLevel.LEVEL_1DAY, adjust_type=AdjustType.
                                turnover_rate=turnover_rate,
                                change_pct=change_pct))
     if kdatas:
-        df = pd.DataFrame.from_records(kdatas)
-        return df
+        return pd.DataFrame.from_records(kdatas)
 
 
 def get_basic_info(entity_id):
@@ -266,11 +262,11 @@ def get_tradable_list(entity_type: Union[TradableType, str] = 'stock',
             if exchange == Exchange.sh:
                 # t=2 主板
                 # t=23 科创板
-                entity_flag = f'fs=m:1+t:2,m:1+t:23'
+                entity_flag = 'fs=m:1+t:2,m:1+t:23'
             if exchange == Exchange.sz:
                 # t=6 主板
                 # t=80 创业板
-                entity_flag = f'fs=m:0+t:6,m:0+t:13,m:0+t:80'
+                entity_flag = 'fs=m:0+t:6,m:0+t:13,m:0+t:80'
             if exchange == Exchange.hk:
                 if hk_south:
                     # 港股通
@@ -278,15 +274,15 @@ def get_tradable_list(entity_type: Union[TradableType, str] = 'stock',
                 else:
                     # t=3 主板
                     # t=4 创业板
-                    entity_flag = f'fs=m:116+t:3,m:116+t:4'
+                    entity_flag = 'fs=m:116+t:3,m:116+t:4'
             if exchange == Exchange.nasdaq:
                 # t=1
                 # t=3 中概股
-                entity_flag = f'fs=m:105+t:1,m:105+t:3'
+                entity_flag = 'fs=m:105+t:1,m:105+t:3'
             if exchange == Exchange.nyse:
                 # t=1
                 # t=3 中概股
-                entity_flag = f'fs=m:106+t:1,m:105+t:3'
+                entity_flag = 'fs=m:106+t:1,m:105+t:3'
         url = f'https://push2.eastmoney.com/api/qt/clist/get?np=1&fltt=2&invt=2&fields=f1,f2,f3,f4,f12,f13,f14&pn=1&pz={limit}&fid=f3&po=1&{entity_flag}&ut=f057cbcbce2a86e2866ab8877db1d059&forcect=1&cb=cbCallbackMore&&callback=jQuery34109676853980006124_{now_timestamp() - 1}&_={now_timestamp()}'
         resp = requests.get(url, headers=DEFAULT_HEADER)
 

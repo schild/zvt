@@ -95,7 +95,7 @@ def report_targets(factor_cls: Type[Factor],
         except Exception as e:
             logger.exception('report error:{}'.format(e))
             time.sleep(60 * 3)
-            error_count = error_count + 1
+            error_count += 1
             if error_count == 10:
                 email_action.send_message(zvt_config['email_username'],
                                           f'report {entity_type}{factor_cls.__name__} error',
@@ -150,24 +150,12 @@ def report_top_stats(entity_provider,
                 add_to_eastmoney(codes=codes, entity_type=entity_type, group='最靓仔', over_write=False)
             except Exception as e:
                 logger.exception(e)
-                email_action.send_message(zvt_config['email_username'], f'report_top_stats error',
-                                          'report_top_stats error:{}'.format(e))
+                email_action.send_message(
+                    zvt_config['email_username'],
+                    'report_top_stats error',
+                    'report_top_stats error:{}'.format(e),
+                )
 
-        # 一年内没怎么动的
-        if period == 365 and False:
-            stable_df = df[(df['score_365'] > -0.1) & (df['score_365'] < 0.1)]
-            vol_df = get_top_volume_entities(entity_type=entity_type, entity_ids=stable_df.index.tolist(),
-                                             start_timestamp=start,
-                                             data_provider=data_provider)
-
-            # add them to eastmoney
-            try:
-                codes = [decode_entity_id(entity_id)[2] for entity_id in vol_df.index[:top_count]]
-                add_to_eastmoney(codes=codes, entity_type='stock', group='躺尸一年')
-            except Exception as e:
-                logger.exception(e)
-                email_action.send_message(zvt_config['email_username'], f'report_top_stats error',
-                                          'report_top_stats error:{}'.format(e))
 
     msg = '\n'
     for s in stats:
