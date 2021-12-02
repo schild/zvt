@@ -29,17 +29,14 @@ def all_tpls(project: str, entity_type: str):
             file_location = f'{project}/domain/quotes/__init__.py'
         elif file_location == 'meta.py':
             file_location = f'{project}/domain/{entity_type}_meta.py'
-        # recorder
         elif file_location == 'kdata_recorder.py':
             file_location = f'{project}/recorders/{entity_type}_kdata_recorder.py'
         elif file_location == 'meta_recorder.py':
             file_location = f'{project}/recorders/{entity_type}_meta_recorder.py'
-        # fill script
         elif file_location == 'fill_project.py':
             file_location = f'{project}/fill_project.py'
-        # tests
         elif file_location == 'test_pass.py':
-            file_location = f'tests/test_pass.py'
+            file_location = 'tests/test_pass.py'
         elif file_location == 'pkg_init.py':
             file_location = f'{project}/__init__.py'
 

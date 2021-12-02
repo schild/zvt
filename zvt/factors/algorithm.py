@@ -140,8 +140,7 @@ class RankScorer(Scorer):
         self.ascending = ascending
 
     def score(self, input_df) -> pd.DataFrame:
-        result_df = input_df.groupby(level=1).rank(ascending=self.ascending, pct=True)
-        return result_df
+        return input_df.groupby(level=1).rank(ascending=self.ascending, pct=True)
 
 
 class MaTransformer(Transformer):

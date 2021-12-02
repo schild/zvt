@@ -44,8 +44,7 @@ class TopTenHolderRecorder(EastmoneyTimestampsDataRecorder):
     def generate_domain_id(self, entity, original_data):
         the_name = original_data.get("GuDongMingCheng")
         timestamp = original_data[self.get_original_time_field()]
-        the_id = "{}_{}_{}".format(entity.id, timestamp, the_name)
-        return the_id
+        return "{}_{}_{}".format(entity.id, timestamp, the_name)
 
 
 if __name__ == '__main__':

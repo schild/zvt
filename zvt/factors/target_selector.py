@@ -96,12 +96,11 @@ class TargetSelector(object):
                         raise Exception('no data for factor:{},{}'.format(factor.factor_name, factor))
                 if is_score_result_df(factor.result_df):
                     df = factor.result_df[['score_result']]
-                    if pd_is_not_null(df):
-                        df.columns = ['score']
-                        scores.append(df)
-                    else:
+                    if not pd_is_not_null(df):
                         raise Exception('no data for factor:{},{}'.format(factor.factor_name, factor))
 
+                    df.columns = ['score']
+                    scores.append(df)
             if filters:
                 if self.select_mode == SelectMode.condition_and:
                     self.filter_result = list(accumulate(filters, func=operator.__and__))[-1]
@@ -123,10 +122,9 @@ class TargetSelector(object):
         else:
             assert False
 
-        if pd_is_not_null(df):
-            if timestamp in df.index:
-                target_df = df.loc[[to_pd_timestamp(timestamp)], :]
-                return target_df['entity_id'].tolist()
+        if pd_is_not_null(df) and timestamp in df.index:
+            target_df = df.loc[[to_pd_timestamp(timestamp)], :]
+            return target_df['entity_id'].tolist()
         return []
 
     def get_open_long_targets(self, timestamp):

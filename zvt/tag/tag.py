@@ -33,7 +33,7 @@ class Tagger(StatefulService):
         self.force = force
         self.session = get_db_session(provider='zvt', data_schema=self.data_schema)
         if self.state and not self.force:
-            logger.info(f'get start_timestamp from state')
+            logger.info('get start_timestamp from state')
             self.start_timestamp = self.state['current_timestamp']
         logger.info(f'tag start_timestamp: {self.start_timestamp}')
 
@@ -48,14 +48,13 @@ class Tagger(StatefulService):
         the_id = f'{entity_id}_{the_date}'
         the_domain = self.data_schema.get_one(id=the_id)
 
-        if the_domain:
-            for k, v in fill_kv.items():
-                exec(f'the_domain.{k}=v')
-        else:
+        if not the_domain:
             return self.data_schema(id=the_id,
                                     entity_id=entity_id,
                                     timestamp=to_pd_timestamp(the_date),
                                     **fill_kv)
+        for k, v in fill_kv.items():
+            exec(f'the_domain.{k}=v')
         return the_domain
 
     def get_tag_domains(self, entity_ids, timestamp, **fill_kv):

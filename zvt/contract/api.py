@@ -175,10 +175,7 @@ def table_name_to_domain_name(table_name: str) -> DeclarativeMeta:
     :rtype:
     """
     parts = table_name.split('_')
-    domain_name = ''
-    for part in parts:
-        domain_name = domain_name + part.capitalize()
-    return domain_name
+    return ''.join(part.capitalize() for part in parts)
 
 
 def get_entity_schema(entity_type: str) -> Type[TradableEntity]:
@@ -358,14 +355,13 @@ def get_data(data_schema: Type[Mixin],
 
     if return_type == 'df':
         df = pd.read_sql(query.statement, query.session.bind)
-        if pd_is_not_null(df):
-            if index:
-                df = index_df(df, index=index, time_field=time_field)
+        if pd_is_not_null(df) and index:
+            df = index_df(df, index=index, time_field=time_field)
         return df
-    elif return_type == 'domain':
-        return query.all()
     elif return_type == 'dict':
         return [item.__dict__ for item in query.all()]
+    elif return_type == 'domain':
+        return query.all()
 
 
 def data_exist(session, schema, id):
@@ -379,8 +375,7 @@ def get_data_count(data_schema, filters=None, session=None):
             query = query.filter(filter)
 
     count_q = query.statement.with_only_columns([func.count(data_schema.id)]).order_by(None)
-    count = session.execute(count_q).scalar()
-    return count
+    return session.execute(count_q).scalar()
 
 
 def get_group(provider, data_schema, column, group_func=func.count, session=None):
@@ -390,8 +385,7 @@ def get_group(provider, data_schema, column, group_func=func.count, session=None
         query = session.query(column, group_func(column)).group_by(column)
     else:
         query = session.query(column).group_by(column)
-    df = pd.read_sql(query.statement, query.session.bind)
-    return df
+    return pd.read_sql(query.statement, query.session.bind)
 
 
 def decode_entity_id(entity_id: str):
@@ -461,7 +455,7 @@ def df_to_db(df: pd.DataFrame,
     if size >= sub_size:
         step_size = int(size / sub_size)
         if size % sub_size:
-            step_size = step_size + 1
+            step_size += 1
     else:
         step_size = 1
 
@@ -487,7 +481,7 @@ def df_to_db(df: pd.DataFrame,
                 df_current = df_current[~df_current['id'].isin(current['id'])]
 
         if pd_is_not_null(df_current):
-            saved = saved + len(df_current)
+            saved += len(df_current)
             df_current.to_sql(data_schema.__tablename__, db_engine, index=False, if_exists='append')
 
     return saved

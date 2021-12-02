@@ -29,9 +29,7 @@ class EastmoneyStockDetailRecorder(Recorder):
             self.codes = [code]
         else:
             self.codes = codes
-        filters = None
-        if not self.force_update:
-            filters = [StockDetail.profile.is_(None)]
+        filters = [StockDetail.profile.is_(None)] if not self.force_update else None
         self.entities = get_entities(session=self.session,
                                          entity_schema=StockDetail,
                                          exchanges=None,
@@ -46,7 +44,7 @@ class EastmoneyStockDetailRecorder(Recorder):
 
             if security_item.exchange == 'sh':
                 fc = "{}01".format(security_item.code)
-            if security_item.exchange == 'sz':
+            elif security_item.exchange == 'sz':
                 fc = "{}02".format(security_item.code)
 
             # 基本资料

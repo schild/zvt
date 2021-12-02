@@ -30,7 +30,7 @@ def risky_company(the_date=to_pd_timestamp(now_time_str()), income_yoy=-0.1, pro
     df = FinanceFactor.query_data(entity_ids=entity_ids, start_timestamp=start_timestamp, filters=[finance_filter],
                                   columns=['code'])
     if pd_is_not_null(df):
-        codes = codes + df.code.tolist()
+        codes += df.code.tolist()
 
     # 高应收，高存货，高商誉
     balance_filter = (BalanceSheet.accounts_receivable + BalanceSheet.inventories + BalanceSheet.goodwill) \
@@ -38,7 +38,7 @@ def risky_company(the_date=to_pd_timestamp(now_time_str()), income_yoy=-0.1, pro
     df = BalanceSheet.query_data(entity_ids=entity_ids, start_timestamp=start_timestamp, filters=[balance_filter],
                                  columns=['code'])
     if pd_is_not_null(df):
-        codes = codes + df.code.tolist()
+        codes += df.code.tolist()
 
     # 应收>利润*1/2
     df1 = BalanceSheet.query_data(entity_ids=entity_ids, start_timestamp=start_timestamp,
@@ -55,7 +55,7 @@ def risky_company(the_date=to_pd_timestamp(now_time_str()), income_yoy=-0.1, pro
         df2 = df2.set_index('code', drop=True).sort_index()
 
     if pd_is_not_null(df1) and pd_is_not_null(df2):
-        codes = codes + df1[df1.accounts_receivable > df2.net_profit / 2].index.tolist()
+        codes += df1[df1.accounts_receivable > df2.net_profit / 2].index.tolist()
 
     return list(set(codes))
 

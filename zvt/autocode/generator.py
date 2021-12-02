@@ -82,19 +82,16 @@ def fill_package_if_not_exist(dir_path: str):
         if entry.is_dir():
             fill_package(entry.path)
             fill_package_if_not_exist(entry.path)
-        elif entry.is_file():
-            pass
 
 
 def fill_package(dir_path: str):
     base_name = os.path.basename(dir_path)
-    if base_name[0].isalpha():
-        if os.path.isdir(dir_path):
-            pkg_file = os.path.join(dir_path, '__init__.py')
-            if not os.path.exists(pkg_file):
-                package_template = '# -*- coding: utf-8 -*-\n'
-                with open(pkg_file, 'w') as outfile:
-                    outfile.write(package_template)
+    if base_name[0].isalpha() and os.path.isdir(dir_path):
+        pkg_file = os.path.join(dir_path, '__init__.py')
+        if not os.path.exists(pkg_file):
+            package_template = '# -*- coding: utf-8 -*-\n'
+            with open(pkg_file, 'w') as outfile:
+                outfile.write(package_template)
 
 
 def gen_exports(dir_path='./domain',

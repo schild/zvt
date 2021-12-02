@@ -41,11 +41,7 @@ class Trader(object):
 
         self.logger = logging.getLogger(__name__)
 
-        if trader_name:
-            self.trader_name = trader_name
-        else:
-            self.trader_name = type(self).__name__.lower()
-
+        self.trader_name = trader_name or type(self).__name__.lower()
         self.entity_ids = entity_ids
         self.exchanges = exchanges
         self.codes = codes
@@ -94,7 +90,10 @@ class Trader(object):
                             adjust_type=self.adjust_type)
 
         if self.selectors:
-            self.trading_level_asc = list(set([IntervalLevel(selector.level) for selector in self.selectors]))
+            self.trading_level_asc = list(
+                {IntervalLevel(selector.level) for selector in self.selectors}
+            )
+
             self.trading_level_asc.sort()
 
             self.logger.info(f'trader level:{self.level},selectors level:{self.trading_level_asc}')
@@ -208,23 +207,23 @@ class Trader(object):
         return 1.0
 
     def on_profit_control(self):
-        if self.profit_threshold and self.get_current_positions():
-            positive = self.profit_threshold[0]
-            negative = self.profit_threshold[1]
-            close_long_entity_ids = []
-            for position in self.get_current_positions():
-                if position.available_long > 1:
-                    # 止盈
-                    if position.profit_rate >= positive:
-                        close_long_entity_ids.append(position.entity_id)
-                        self.logger.info(f'close profit {position.profit_rate} for {position.entity_id}')
-                    # 止损
-                    if position.profit_rate <= negative:
-                        close_long_entity_ids.append(position.entity_id)
-                        self.logger.info(f'cut lost {position.profit_rate} for {position.entity_id}')
+        if not self.profit_threshold or not self.get_current_positions():
+            return None, None
+        positive = self.profit_threshold[0]
+        negative = self.profit_threshold[1]
+        close_long_entity_ids = []
+        for position in self.get_current_positions():
+            if position.available_long > 1:
+                # 止盈
+                if position.profit_rate >= positive:
+                    close_long_entity_ids.append(position.entity_id)
+                    self.logger.info(f'close profit {position.profit_rate} for {position.entity_id}')
+                # 止损
+                if position.profit_rate <= negative:
+                    close_long_entity_ids.append(position.entity_id)
+                    self.logger.info(f'cut lost {position.profit_rate} for {position.entity_id}')
 
-            return close_long_entity_ids, None
-        return None, None
+        return close_long_entity_ids, None
 
     def buy(self, due_timestamp, happen_timestamp, entity_ids, ignore_in_position=True):
         if ignore_in_position:
@@ -304,7 +303,7 @@ class Trader(object):
         self.logger.info(f'on_targets_filtered {level} long:{long_targets}')
 
         if len(long_targets) > 10:
-            long_targets = long_targets[0:10]
+            long_targets = long_targets[:10]
         self.logger.info(f'on_targets_filtered {level} filtered long:{long_targets}')
 
         return long_targets, short_targets

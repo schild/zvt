@@ -30,10 +30,7 @@ class JqChinaFundRecorder(Recorder):
             while True:
                 latest = Fund.query_data(filters=[Fund.operate_mode_id == operate_mode_id], order=Fund.timestamp.desc(),
                                          limit=1, return_type='domain')
-                start_timestamp = '2000-01-01'
-                if latest:
-                    start_timestamp = latest[0].timestamp
-
+                start_timestamp = latest[0].timestamp if latest else '2000-01-01'
                 end_timestamp = min(next_date(start_timestamp, 365 * year_count), now_pd_timestamp())
 
                 df = run_query(table='finance.FUND_MAIN_INFO',
@@ -41,7 +38,7 @@ class JqChinaFundRecorder(Recorder):
                                parse_dates=['start_date', 'end_date'],
                                dtype={'main_code': str})
                 if not pd_is_not_null(df) or (df['start_date'].max().year < end_timestamp.year):
-                    year_count = year_count + 1
+                    year_count += 1
 
                 if pd_is_not_null(df):
                     df.rename(columns={'start_date': 'timestamp'}, inplace=True)
@@ -122,7 +119,7 @@ class JqChinaFundStockRecorder(TimeSeriesDataRecorder):
 
                 # 取到了最近两年的数据，再请求一次,确保取完最新的数据
                 if latest.year >= now_pd_timestamp().year - 1:
-                    redundant_times = redundant_times - 1
+                    redundant_times -= 1
                 start = latest
             else:
                 return None

@@ -27,10 +27,13 @@ class EMStockTopTenFreeRecorder(TimestampsDataRecorder):
 
     def on_finish_entity(self, entity):
         super().on_finish_entity(entity)
-        holders = StockTopTenFreeHolder.query_data(entity_id=entity.id,
-                                                   filters=[StockTopTenFreeHolder.holding_values == None],
-                                                   session=self.session,
-                                                   return_type='domain')
+        holders = StockTopTenFreeHolder.query_data(
+            entity_id=entity.id,
+            filters=[StockTopTenFreeHolder.holding_values is None],
+            session=self.session,
+            return_type='domain',
+        )
+
         for holder in holders:
             ii = StockInstitutionalInvestorHolder.query_data(entity_id=entity.id,
                                                              filters=[

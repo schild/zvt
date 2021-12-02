@@ -55,21 +55,22 @@ class BaseEMStockKdataRecorder(FixedCycleDataRecorder):
 
     def on_finish_entity(self, entity):
         # fill timestamp
-        if not entity.timestamp or not entity.list_date:
-            # get the first
-            kdatas = self.data_schema.query_data(provider=self.provider, entity_id=entity.id,
-                                                 order=self.data_schema.timestamp.asc(), limit=1, return_type='domain')
-            if kdatas:
-                timestamp = kdatas[0].timestamp
+        if entity.timestamp and entity.list_date:
+            return
+        # get the first
+        kdatas = self.data_schema.query_data(provider=self.provider, entity_id=entity.id,
+                                             order=self.data_schema.timestamp.asc(), limit=1, return_type='domain')
+        if kdatas:
+            timestamp = kdatas[0].timestamp
 
-                self.logger.info(f'fill {entity.name} list_date as {timestamp}')
+            self.logger.info(f'fill {entity.name} list_date as {timestamp}')
 
-                if not entity.timestamp:
-                    entity.timestamp = timestamp
-                if not entity.list_date:
-                    entity.list_date = timestamp
-                self.entity_session.add(entity)
-                self.entity_session.commit()
+            if not entity.timestamp:
+                entity.timestamp = timestamp
+            if not entity.list_date:
+                entity.list_date = timestamp
+            self.entity_session.add(entity)
+            self.entity_session.commit()
 
 
 class EMStockKdataRecorder(BaseEMStockKdataRecorder):

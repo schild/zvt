@@ -23,10 +23,14 @@ class Meta(type):
     def __new__(meta, name, bases, class_dict):
         cls = type.__new__(meta, name, bases, class_dict)
         # register the recorder class to the data_schema
-        if hasattr(cls, 'data_schema') and hasattr(cls, 'provider'):
-            if cls.data_schema and issubclass(cls.data_schema, Mixin):
-                print(f'{cls.__name__}:{cls.data_schema.__name__}')
-                cls.data_schema.register_recorder_cls(cls.provider, cls)
+        if (
+            hasattr(cls, 'data_schema')
+            and hasattr(cls, 'provider')
+            and cls.data_schema
+            and issubclass(cls.data_schema, Mixin)
+        ):
+            print(f'{cls.__name__}:{cls.data_schema.__name__}')
+            cls.data_schema.register_recorder_cls(cls.provider, cls)
         return cls
 
 
@@ -64,11 +68,7 @@ class Recorder(StatefulService, metaclass=Meta):
         raise NotImplementedError
 
     def sleep(self, seconds=None):
-        if seconds:
-            sleeping_time = seconds
-        else:
-            sleeping_time = self.sleeping_time
-
+        sleeping_time = seconds or self.sleeping_time
         if sleeping_time and sleeping_time > 0:
             self.logger.info(f'sleeping {sleeping_time} seconds')
             time.sleep(self.sleeping_time)
@@ -214,9 +214,8 @@ class TimeSeriesDataRecorder(EntityEventRecorder):
             latest_timestamp = max(latest_timestamp, self.start_timestamp)
 
         size = self.default_size
-        if self.end_timestamp:
-            if latest_timestamp > self.end_timestamp:
-                size = 0
+        if self.end_timestamp and latest_timestamp > self.end_timestamp:
+            size = 0
 
         return latest_timestamp, self.end_timestamp, size, None
 
@@ -451,12 +450,15 @@ class TimeSeriesDataRecorder(EntityEventRecorder):
                                 (self.close_hour is not None) and \
                                 (self.close_minute is not None):
                             current_timestamp = pd.Timestamp.now()
-                            if current_timestamp.hour >= self.close_hour:
-                                if current_timestamp.minute - self.close_minute >= 5:
-                                    self.logger.info(
-                                        '{} now is the close time:{}'.format(entity_item.id, current_timestamp))
+                            if (
+                                current_timestamp.hour >= self.close_hour
+                                and current_timestamp.minute - self.close_minute
+                                >= 5
+                            ):
+                                self.logger.info(
+                                    '{} now is the close time:{}'.format(entity_item.id, current_timestamp))
 
-                                    entity_finished = True
+                                entity_finished = True
 
                     # add finished entity to finished_items
                     if entity_finished:
@@ -534,10 +536,11 @@ class FixedCycleDataRecorder(TimeSeriesDataRecorder):
                            level=self.level)
         if records:
             # delete unfinished kdata
-            if len(records) == 2:
-                if is_in_same_interval(t1=records[0].timestamp, t2=records[1].timestamp, level=self.level):
-                    self.session.delete(records[1])
-                    self.session.flush()
+            if len(records) == 2 and is_in_same_interval(
+                t1=records[0].timestamp, t2=records[1].timestamp, level=self.level
+            ):
+                self.session.delete(records[1])
+                self.session.flush()
             return records[0]
         return None
 

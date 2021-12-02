@@ -11,11 +11,7 @@ def zip_dir(src_dir,
     if not zip_file_name:
         zip_file_name = "data-{}.zip".format(datetime.datetime.today())
 
-    if dst_dir:
-        dst_path = os.path.join(dst_dir, zip_file_name)
-    else:
-        dst_path = zip_file_name
-
+    dst_path = os.path.join(dst_dir, zip_file_name) if dst_dir else zip_file_name
     # os.remove(dst_path)
 
     the_zip_file = zipfile.ZipFile(dst_path, 'w')

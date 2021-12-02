@@ -20,7 +20,7 @@ def to_jq_trading_level(trading_level: IntervalLevel):
 
 
 def to_jq_entity_id(security_item):
-    if security_item.entity_type == 'stock' or security_item.entity_type == 'index':
+    if security_item.entity_type in ['stock', 'index']:
         if security_item.exchange == 'sh':
             return '{}.XSHG'.format(security_item.code)
         if security_item.exchange == 'sz':

@@ -12,14 +12,14 @@ from zvt.utils.pd_utils import pd_is_not_null
 
 
 def order_type_color(order_type):
-    if order_type == 'order_long' or order_type == 'order_close_short':
+    if order_type in ['order_long', 'order_close_short']:
         return "#ec0000"
     else:
         return "#00da3c"
 
 
 def order_type_flag(order_type):
-    if order_type == 'order_long' or order_type == 'order_close_short':
+    if order_type in ['order_long', 'order_close_short']:
         return 'B'
     else:
         return 'S'

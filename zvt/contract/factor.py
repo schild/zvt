@@ -44,16 +44,15 @@ class Transformer(Indicator):
         :return:
         """
         g = input_df.groupby(level=0)
-        if len(g.groups) == 1:
-            entity_id = input_df.index[0][0]
-
-            df = input_df.reset_index(level=0, drop=True)
-            ret_df = self.transform_one(entity_id=entity_id, df=df)
-            ret_df['entity_id'] = entity_id
-
-            return ret_df.set_index('entity_id', append=True).swaplevel(0, 1)
-        else:
+        if len(g.groups) != 1:
             return g.apply(lambda x: self.transform_one(x.index[0][0], x.reset_index(level=0, drop=True)))
+        entity_id = input_df.index[0][0]
+
+        df = input_df.reset_index(level=0, drop=True)
+        ret_df = self.transform_one(entity_id=entity_id, df=df)
+        ret_df['entity_id'] = entity_id
+
+        return ret_df.set_index('entity_id', append=True).swaplevel(0, 1)
 
     def transform_one(self, entity_id: str, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -112,16 +111,13 @@ class Accumulator(Indicator):
 
             def cal_acc(x):
                 entity_id = x.index[0][0]
+                acc_one_df = None
                 if pd_is_not_null(acc_df):
                     acc_g = acc_df.groupby(level=0)
-                    acc_one_df = None
                     if entity_id in acc_g.groups:
                         acc_one_df = acc_g.get_group(entity_id)
                         if pd_is_not_null(acc_one_df):
                             acc_one_df = acc_one_df.reset_index(level=0, drop=True)
-                else:
-                    acc_one_df = None
-
                 one_result, state = self.acc_one(entity_id=entity_id,
                                                  df=x.reset_index(level=0, drop=True),
                                                  acc_df=acc_one_df,
@@ -267,16 +263,8 @@ class Factor(DataReader, DataListener):
         self.fill_method = fill_method
         self.effective_number = effective_number
 
-        if transformer:
-            self.transformer = transformer
-        else:
-            self.transformer = self.__class__.transformer
-
-        if accumulator:
-            self.accumulator = accumulator
-        else:
-            self.accumulator = self.__class__.accumulator
-
+        self.transformer = transformer or self.__class__.transformer
+        self.accumulator = accumulator or self.__class__.accumulator
         self.need_persist = need_persist
         self.dry_run = only_compute_factor
 
@@ -485,8 +473,7 @@ class Factor(DataReader, DataListener):
                 return None
             if order_type:
                 return 'B'
-            if not order_type:
-                return 'S'
+            return 'S'
 
         def order_type_color(order_type):
             if order_type:

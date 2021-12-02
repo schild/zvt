@@ -43,8 +43,12 @@ def record_block():
             try:
                 add_to_eastmoney(codes=df['code'], entity_type='block', group='新概念', over_write=False)
             except Exception as e:
-                email_action.send_message(zvt_config['email_username'], f'report_concept error',
-                                          'report_concept error:{}'.format(e))
+                email_action.send_message(
+                    zvt_config['email_username'],
+                    'report_concept error',
+                    'report_concept error:{}'.format(e),
+                )
+
 
             email_action.send_message(zvt_config['email_username'], 'record block finished', '')
             break

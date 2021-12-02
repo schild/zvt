@@ -40,7 +40,7 @@ class ZState(Bean):
         super().__init__()
 
         if not state:
-            state = dict()
+            state = {}
 
         # 用于计算未完成段的分型
         self.fenxing_list = state.get('fenxing_list', [])
@@ -256,7 +256,6 @@ class ZAccumulator(Accumulator):
             # 方向一致，延续中
             if tmp_direction == zen_state.direction:
                 zen_state.opposite_count = 0
-            # 反向，寻找反 分型
             else:
                 zen_state.opposite_count = zen_state.opposite_count + 1
 
@@ -299,110 +298,112 @@ class ZAccumulator(Accumulator):
                         zen_state.can_fenxing_index = pre_index
 
                 # 分型确立
-                if zen_state.can_fenxing is not None:
-                    if zen_state.opposite_count >= 4 or (index - zen_state.can_fenxing_index >= 8):
-                        acc_df.loc[zen_state.can_fenxing_index, fenxing_col] = True
+                if zen_state.can_fenxing is not None and (
+                    zen_state.opposite_count >= 4
+                    or (index - zen_state.can_fenxing_index >= 8)
+                ):
+                    acc_df.loc[zen_state.can_fenxing_index, fenxing_col] = True
 
-                        # 记录笔的值
-                        if fenxing_col == 'bi_ding':
-                            bi_value = acc_df.loc[zen_state.can_fenxing_index, 'high']
-                        else:
-                            bi_value = acc_df.loc[zen_state.can_fenxing_index, 'low']
-                        acc_df.loc[zen_state.can_fenxing_index, 'bi_value'] = bi_value
+                    # 记录笔的值
+                    if fenxing_col == 'bi_ding':
+                        bi_value = acc_df.loc[zen_state.can_fenxing_index, 'high']
+                    else:
+                        bi_value = acc_df.loc[zen_state.can_fenxing_index, 'low']
+                    acc_df.loc[zen_state.can_fenxing_index, 'bi_value'] = bi_value
 
-                        # 计算笔斜率
-                        if zen_state.pre_bi:
-                            change = ((bi_value - zen_state.pre_bi[1]) / zen_state.pre_bi[1])
-                            interval = (zen_state.can_fenxing_index - zen_state.pre_bi[0])
-                            bi_slope = change / interval
-                            acc_df.loc[zen_state.can_fenxing_index, 'bi_change'] = change
-                            acc_df.loc[zen_state.can_fenxing_index, 'bi_slope'] = bi_slope
-                            acc_df.loc[zen_state.can_fenxing_index, 'bi_interval'] = interval
+                    # 计算笔斜率
+                    if zen_state.pre_bi:
+                        change = ((bi_value - zen_state.pre_bi[1]) / zen_state.pre_bi[1])
+                        interval = (zen_state.can_fenxing_index - zen_state.pre_bi[0])
+                        bi_slope = change / interval
+                        acc_df.loc[zen_state.can_fenxing_index, 'bi_change'] = change
+                        acc_df.loc[zen_state.can_fenxing_index, 'bi_slope'] = bi_slope
+                        acc_df.loc[zen_state.can_fenxing_index, 'bi_interval'] = interval
 
-                        # 记录用于计算笔中枢的笔
-                        zen_state.bis.append((acc_df.loc[zen_state.can_fenxing_index, 'timestamp'], bi_value,
-                                              zen_state.can_fenxing_index))
+                    # 记录用于计算笔中枢的笔
+                    zen_state.bis.append((acc_df.loc[zen_state.can_fenxing_index, 'timestamp'], bi_value,
+                                          zen_state.can_fenxing_index))
 
-                        # 计算笔中枢，当下来说这个 中枢 是确定的，并且是不可变的
-                        # 但标记的点为 过去，注意在回测时最近的一个中枢可能用到未来函数，前一个才是 已知的
-                        # 所以记了一个 current_zhongshu_y0 current_zhongshu_y1 这个是可直接使用的
-                        end_index = zen_state.can_fenxing_index
+                    # 计算笔中枢，当下来说这个 中枢 是确定的，并且是不可变的
+                    # 但标记的点为 过去，注意在回测时最近的一个中枢可能用到未来函数，前一个才是 已知的
+                    # 所以记了一个 current_zhongshu_y0 current_zhongshu_y1 这个是可直接使用的
+                    end_index = zen_state.can_fenxing_index
 
-                        zen_state.bis, current_zhongshu, current_zhongshu_change, current_zhongshu_interval = handle_zhongshu(
-                            points=zen_state.bis,
-                            acc_df=acc_df,
-                            end_index=end_index,
-                            zhongshu_col='bi_zhongshu',
-                            zhongshu_change_col='bi_zhongshu_change')
+                    zen_state.bis, current_zhongshu, current_zhongshu_change, current_zhongshu_interval = handle_zhongshu(
+                        points=zen_state.bis,
+                        acc_df=acc_df,
+                        end_index=end_index,
+                        zhongshu_col='bi_zhongshu',
+                        zhongshu_change_col='bi_zhongshu_change')
 
-                        zen_state.pre_bi = (zen_state.can_fenxing_index, bi_value)
+                    zen_state.pre_bi = (zen_state.can_fenxing_index, bi_value)
 
-                        zen_state.opposite_count = 0
-                        zen_state.direction = zen_state.direction.opposite()
-                        zen_state.can_fenxing = None
+                    zen_state.opposite_count = 0
+                    zen_state.direction = zen_state.direction.opposite()
+                    zen_state.can_fenxing = None
 
-                        # 确定第一个段
-                        if zen_state.fenxing_list != None:
-                            zen_state.fenxing_list.append(
-                                Fenxing(state=fenxing_col,
-                                        kdata={
-                                            'low': float(acc_df.loc[zen_state.can_fenxing_index]['low']),
-                                            'high': float(acc_df.loc[zen_state.can_fenxing_index]['high'])
-                                        },
-                                        index=zen_state.can_fenxing_index))
+                    # 确定第一个段
+                    if zen_state.fenxing_list != None:
+                        zen_state.fenxing_list.append(
+                            Fenxing(state=fenxing_col,
+                                    kdata={
+                                        'low': float(acc_df.loc[zen_state.can_fenxing_index]['low']),
+                                        'high': float(acc_df.loc[zen_state.can_fenxing_index]['high'])
+                                    },
+                                    index=zen_state.can_fenxing_index))
 
-                            if len(zen_state.fenxing_list) == 4:
-                                duan_state = handle_duan(fenxing_list=zen_state.fenxing_list,
-                                                         pre_duan_state=zen_state.current_duan_state)
+                        if len(zen_state.fenxing_list) == 4:
+                            duan_state = handle_duan(fenxing_list=zen_state.fenxing_list,
+                                                     pre_duan_state=zen_state.current_duan_state)
 
-                                change = duan_state != zen_state.current_duan_state
+                            change = duan_state != zen_state.current_duan_state
 
-                                if change:
-                                    zen_state.current_duan_state = duan_state
+                            if change:
+                                zen_state.current_duan_state = duan_state
 
-                                    # 确定状态
-                                    acc_df.loc[zen_state.fenxing_list[0].index:zen_state.fenxing_list[-1].index,
-                                    'duan_state'] = zen_state.current_duan_state
+                                # 确定状态
+                                acc_df.loc[zen_state.fenxing_list[0].index:zen_state.fenxing_list[-1].index,
+                                'duan_state'] = zen_state.current_duan_state
 
-                                    duan_index = zen_state.fenxing_list[0].index
-                                    if zen_state.current_duan_state == 'up':
-                                        acc_df.loc[duan_index, 'duan_di'] = True
-                                        duan_value = acc_df.loc[duan_index, 'low']
-                                    else:
-                                        duan_index = zen_state.fenxing_list[0].index
-                                        acc_df.loc[duan_index, 'duan_ding'] = True
-                                        duan_value = acc_df.loc[duan_index, 'high']
-                                    # 记录段的值
-                                    acc_df.loc[duan_index, 'duan_value'] = duan_value
-
-                                    # 计算段斜率
-                                    if zen_state.pre_duan:
-                                        change = ((duan_value - zen_state.pre_duan[1]) / zen_state.pre_duan[1])
-                                        interval = (duan_index - zen_state.pre_duan[0])
-                                        duan_slope = change / interval
-                                        acc_df.loc[duan_index, 'duan_change'] = change
-                                        acc_df.loc[duan_index, 'duan_slope'] = duan_slope
-                                        acc_df.loc[duan_index, 'duan_interval'] = interval
-
-                                    zen_state.pre_duan = (duan_index, duan_value)
-
-                                    # 记录用于计算中枢的段
-                                    zen_state.duans.append(
-                                        (acc_df.loc[duan_index, 'timestamp'], duan_value, duan_index))
-
-                                    # 计算中枢
-                                    zen_state.duans, _, _, _ = handle_zhongshu(points=zen_state.duans, acc_df=acc_df,
-                                                                               end_index=duan_index,
-                                                                               zhongshu_col='zhongshu',
-                                                                               zhongshu_change_col='zhongshu_change')
-
-                                    # 只留最后一个
-                                    zen_state.fenxing_list = zen_state.fenxing_list[-1:]
+                                duan_index = zen_state.fenxing_list[0].index
+                                if zen_state.current_duan_state == 'up':
+                                    acc_df.loc[duan_index, 'duan_di'] = True
+                                    duan_value = acc_df.loc[duan_index, 'low']
                                 else:
-                                    # 保持之前的状态并踢出候选
-                                    acc_df.loc[
-                                        zen_state.fenxing_list[0].index, 'duan_state'] = zen_state.current_duan_state
-                                    zen_state.fenxing_list = zen_state.fenxing_list[1:]
+                                    duan_index = zen_state.fenxing_list[0].index
+                                    acc_df.loc[duan_index, 'duan_ding'] = True
+                                    duan_value = acc_df.loc[duan_index, 'high']
+                                # 记录段的值
+                                acc_df.loc[duan_index, 'duan_value'] = duan_value
+
+                                # 计算段斜率
+                                if zen_state.pre_duan:
+                                    change = ((duan_value - zen_state.pre_duan[1]) / zen_state.pre_duan[1])
+                                    interval = (duan_index - zen_state.pre_duan[0])
+                                    duan_slope = change / interval
+                                    acc_df.loc[duan_index, 'duan_change'] = change
+                                    acc_df.loc[duan_index, 'duan_slope'] = duan_slope
+                                    acc_df.loc[duan_index, 'duan_interval'] = interval
+
+                                zen_state.pre_duan = (duan_index, duan_value)
+
+                                # 记录用于计算中枢的段
+                                zen_state.duans.append(
+                                    (acc_df.loc[duan_index, 'timestamp'], duan_value, duan_index))
+
+                                # 计算中枢
+                                zen_state.duans, _, _, _ = handle_zhongshu(points=zen_state.duans, acc_df=acc_df,
+                                                                           end_index=duan_index,
+                                                                           zhongshu_col='zhongshu',
+                                                                           zhongshu_change_col='zhongshu_change')
+
+                                # 只留最后一个
+                                zen_state.fenxing_list = zen_state.fenxing_list[-1:]
+                            else:
+                                # 保持之前的状态并踢出候选
+                                acc_df.loc[
+                                    zen_state.fenxing_list[0].index, 'duan_state'] = zen_state.current_duan_state
+                                zen_state.fenxing_list = zen_state.fenxing_list[1:]
 
             pre_kdata = kdata
             pre_index = index

@@ -80,9 +80,12 @@ class GoodCompanyFactor(FinanceBaseFactor):
 
         # 对于根据年度计算才有意义的指标，比如roe,我们会对不同季度的值区别处理,传入的参数为季度值
         self.col_period_threshold = col_period_threshold
-        if self.col_period_threshold:
-            if 'report_period' not in columns and (data_schema.report_period not in columns):
-                columns.append(data_schema.report_period)
+        if (
+            self.col_period_threshold
+            and 'report_period' not in columns
+            and (data_schema.report_period not in columns)
+        ):
+            columns.append(data_schema.report_period)
 
         self.logger.info(f'using data_schema:{data_schema.__name__}')
 

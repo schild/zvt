@@ -89,10 +89,7 @@ def df_subset(df, columns=None):
 def fill_with_same_index(df_list: List[pd.DataFrame]):
     idx = None
     for df in df_list:
-        if idx is None:
-            idx = df.index
-        else:
-            idx = idx.append(df.index).drop_duplicates()
+        idx = df.index if idx is None else idx.append(df.index).drop_duplicates()
     idx = idx.sort_values()
 
     result = []

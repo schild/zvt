@@ -29,19 +29,20 @@ class NormalData(object):
         entity_id    timestamp
 
         """
-        if pd_is_not_null(self.data_df):
-            if not is_normal_df(self.data_df):
-                self.data_df = normal_index_df(self.data_df, self.category_field, self.time_field)
+        if not pd_is_not_null(self.data_df):
+            return
+        if not is_normal_df(self.data_df):
+            self.data_df = normal_index_df(self.data_df, self.category_field, self.time_field)
 
-            self.entity_ids = self.data_df.index.levels[0].to_list()
+        self.entity_ids = self.data_df.index.levels[0].to_list()
 
-            for entity_id in self.entity_ids:
-                df = self.data_df.loc[(entity_id,)]
-                self.df_list.append(df)
-                self.entity_map_df[entity_id] = df
+        for entity_id in self.entity_ids:
+            df = self.data_df.loc[(entity_id,)]
+            self.df_list.append(df)
+            self.entity_map_df[entity_id] = df
 
-            if len(self.df_list) > 1 and self.fill_index:
-                self.df_list = fill_with_same_index(df_list=self.df_list)
+        if len(self.df_list) > 1 and self.fill_index:
+            self.df_list = fill_with_same_index(df_list=self.df_list)
 
     def empty(self):
         return not pd_is_not_null(self.data_df)

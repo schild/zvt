@@ -60,11 +60,7 @@ def get_top_performance_entities(entity_type='stock', start_timestamp=None, end_
             logger.info(f'ignore size: {len(ignore_entities)}')
             logger.info(f'ignore entities: {ignore_entities}')
             f = [data_schema.entity_id.notin_(ignore_entities)]
-            if filters:
-                filters = filters + f
-            else:
-                filters = f
-
+            filters = filters + f if filters else f
     return get_top_entities(data_schema=data_schema, start_timestamp=start_timestamp, end_timestamp=end_timestamp,
                             column='close', pct=pct, method=WindowMethod.change, return_type=return_type,
                             filters=filters, show_name=show_name, data_provider=data_provider)
@@ -141,10 +137,7 @@ def get_top_volume_entities(entity_type='stock', entity_ids=None, start_timestam
 
     data_schema = get_kdata_schema(entity_type=entity_type, adjust_type=adjust_type)
 
-    filters = None
-    if entity_ids:
-        filters = [data_schema.entity_id.in_(entity_ids)]
-
+    filters = [data_schema.entity_id.in_(entity_ids)] if entity_ids else None
     result, _ = get_top_entities(data_schema=data_schema, start_timestamp=start_timestamp, end_timestamp=end_timestamp,
                                  column='turnover', pct=pct, method=method, return_type=return_type, filters=filters,
                                  data_provider=data_provider)
@@ -174,11 +167,7 @@ def get_top_entities(data_schema: Mixin, column: str, start_timestamp=None, end_
     if type(return_type) == str:
         return_type = TopType(return_type)
 
-    if show_name:
-        columns = ['entity_id', column, 'name']
-    else:
-        columns = ['entity_id', column]
-
+    columns = ['entity_id', column, 'name'] if show_name else ['entity_id', column]
     all_df = data_schema.query_data(start_timestamp=start_timestamp, end_timestamp=end_timestamp,
                                     columns=columns, filters=filters, provider=data_provider)
     if not pd_is_not_null(all_df):

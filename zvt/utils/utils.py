@@ -42,13 +42,13 @@ def to_float(the_str, default=None):
     try:
         scale = 1.0
         if the_str[-2:] == '万亿':
-            the_str = the_str[0:-2]
+            the_str = the_str[:-2]
             scale = 1000000000000
         elif the_str[-1] == '亿':
-            the_str = the_str[0:-1]
+            the_str = the_str[:-1]
             scale = 100000000
         elif the_str[-1] == '万':
-            the_str = the_str[0:-1]
+            the_str = the_str[:-1]
             scale = 10000
         if not the_str:
             return default
@@ -90,10 +90,7 @@ def fill_domain_from_dict(the_domain, the_dict: dict, the_map: dict = None, defa
     :type default_func: function
     """
     if not the_map:
-        the_map = {}
-        for k in the_dict:
-            the_map[k] = (k, default_func)
-
+        the_map = {k: (k, default_func) for k in the_dict}
     for k, v in the_map.items():
         if isinstance(v, tuple):
             field_in_dict = v[0]
@@ -187,12 +184,12 @@ def iterate_with_step(data, sub_size=100):
     if size >= sub_size:
         step_count = int(size / sub_size)
         if size % sub_size:
-            step_count = step_count + 1
+            step_count += 1
     else:
         step_count = 1
 
     for step in range(step_count):
-        if type(data) == pd.DataFrame or type(data) == pd.Series:
+        if type(data) in [pd.DataFrame, pd.Series]:
             yield data.iloc[sub_size * step:sub_size * (step + 1)]
         else:
             yield data[sub_size * step:sub_size * (step + 1)]

@@ -61,12 +61,7 @@ class MultipleTrader(StockTrader):
                       entity_ids=['stock_sz_000338', 'stock_sh_601318'])
 
     def long_position_control(self):
-        if self.has_buy:
-            position_pct = 1.0
-        else:
-            position_pct = 0.5
-
-        return position_pct
+        return 1.0 if self.has_buy else 0.5
 
 
 def test_multiple_trader():

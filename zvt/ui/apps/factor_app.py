@@ -28,14 +28,14 @@ trader_names: List[str] = []
 
 
 def order_type_flag(order_type):
-    if order_type == 'order_long' or order_type == 'order_close_short':
+    if order_type in ['order_long', 'order_close_short']:
         return 'B'
     else:
         return 'S'
 
 
 def order_type_color(order_type):
-    if order_type == 'order_long' or order_type == 'order_close_short':
+    if order_type in ['order_long', 'order_close_short']:
         return "#ec0000"
     else:
         return "#00da3c"
@@ -60,7 +60,7 @@ load_traders()
 
 
 def factor_layout():
-    layout = html.Div(
+    return html.Div(
         [
             # controls
             html.Div(
@@ -73,25 +73,33 @@ def factor_layout():
                                 className="padding-top-bot",
                                 children=[
                                     html.H6("select trader:"),
-                                    dcc.Dropdown(id='trader-selector',
-                                                 placeholder='select the trader',
-                                                 options=[{'label': item, 'value': i} for i, item in
-                                                          enumerate(trader_names)]
-                                                 ),
+                                    dcc.Dropdown(
+                                        id='trader-selector',
+                                        placeholder='select the trader',
+                                        options=[
+                                            {'label': item, 'value': i}
+                                            for i, item in enumerate(
+                                                trader_names
+                                            )
+                                        ],
+                                    ),
                                 ],
                             ),
-
                             # select entity type
                             html.Div(
                                 className="padding-top-bot",
                                 children=[
                                     html.H6("select entity type:"),
-                                    dcc.Dropdown(id='entity-type-selector',
-                                                 placeholder='select entity type',
-                                                 options=[{'label': name, 'value': name} for name in
-                                                          zvt_context.tradable_schema_map.keys()],
-                                                 value='stock',
-                                                 clearable=False)
+                                    dcc.Dropdown(
+                                        id='entity-type-selector',
+                                        placeholder='select entity type',
+                                        options=[
+                                            {'label': name, 'value': name}
+                                            for name in zvt_context.tradable_schema_map.keys()
+                                        ],
+                                        value='stock',
+                                        clearable=False,
+                                    ),
                                 ],
                             ),
                             # select entity provider
@@ -99,18 +107,21 @@ def factor_layout():
                                 className="padding-top-bot",
                                 children=[
                                     html.H6("select entity provider:"),
-                                    dcc.Dropdown(id='entity-provider-selector',
-                                                 placeholder='select entity provider')
+                                    dcc.Dropdown(
+                                        id='entity-provider-selector',
+                                        placeholder='select entity provider',
+                                    ),
                                 ],
                             ),
-
                             # select entity
                             html.Div(
                                 className="padding-top-bot",
                                 children=[
                                     html.H6("select entity:"),
-                                    dcc.Dropdown(id='entity-selector',
-                                                 placeholder='select entity')
+                                    dcc.Dropdown(
+                                        id='entity-selector',
+                                        placeholder='select entity',
+                                    ),
                                 ],
                             ),
                             # select levels
@@ -120,11 +131,19 @@ def factor_layout():
                                     html.H6("select levels:"),
                                     dcc.Dropdown(
                                         id='levels-selector',
-                                        options=[{'label': level.name, 'value': level.value} for level in
-                                                 (IntervalLevel.LEVEL_1WEEK, IntervalLevel.LEVEL_1DAY)],
+                                        options=[
+                                            {
+                                                'label': level.name,
+                                                'value': level.value,
+                                            }
+                                            for level in (
+                                                IntervalLevel.LEVEL_1WEEK,
+                                                IntervalLevel.LEVEL_1DAY,
+                                            )
+                                        ],
                                         value='1d',
-                                        multi=True
-                                    )
+                                        multi=True,
+                                    ),
                                 ],
                             ),
                             # select factor
@@ -132,44 +151,61 @@ def factor_layout():
                                 className="padding-top-bot",
                                 children=[
                                     html.H6("select factor:"),
-                                    dcc.Dropdown(id='factor-selector',
-                                                 placeholder='select factor',
-                                                 options=[{'label': name, 'value': name} for name in
-                                                          zvt_context.factor_cls_registry.keys()],
-                                                 value='TechnicalFactor')
-                                ]
+                                    dcc.Dropdown(
+                                        id='factor-selector',
+                                        placeholder='select factor',
+                                        options=[
+                                            {'label': name, 'value': name}
+                                            for name in zvt_context.factor_cls_registry.keys()
+                                        ],
+                                        value='TechnicalFactor',
+                                    ),
+                                ],
                             ),
                             # select data
                             html.Div(
                                 children=[
                                     html.Div(
                                         [
-                                            html.H6("related/all data to show in sub graph",
-                                                    style={"display": "inline-block"}),
+                                            html.H6(
+                                                "related/all data to show in sub graph",
+                                                style={
+                                                    "display": "inline-block"
+                                                },
+                                            ),
                                             daq.BooleanSwitch(
                                                 id='data-switch',
                                                 on=True,
-                                                style={"display": "inline-block",
-                                                       "float": "right",
-                                                       "vertical-align": "middle",
-                                                       "padding": "8px"}
+                                                style={
+                                                    "display": "inline-block",
+                                                    "float": "right",
+                                                    "vertical-align": "middle",
+                                                    "padding": "8px",
+                                                },
                                             ),
                                         ],
                                     ),
-                                    dcc.Dropdown(id='data-selector', placeholder='schema')
+                                    dcc.Dropdown(
+                                        id='data-selector',
+                                        placeholder='schema',
+                                    ),
                                 ],
-                                style={"padding-top": "12px"}
+                                style={"padding-top": "12px"},
                             ),
                             # select properties
                             html.Div(
                                 children=[
-                                    dcc.Dropdown(id='schema-column-selector', placeholder='properties')
+                                    dcc.Dropdown(
+                                        id='schema-column-selector',
+                                        placeholder='properties',
+                                    )
                                 ],
-                                style={"padding-top": "6px"}
+                                style={"padding-top": "6px"},
                             ),
-
-                        ])
-                ]),
+                        ],
+                    )
+                ],
+            ),
             # Graph
             html.Div(
                 className="nine columns card-left",
@@ -178,14 +214,11 @@ def factor_layout():
                         id='trader-details',
                         className="bg-white",
                     ),
-                    html.Div(
-                        id='factor-details'
-                    )
-                ])
+                    html.Div(id='factor-details'),
+                ],
+            ),
         ]
     )
-
-    return layout
 
 
 @zvt_app.callback(
@@ -214,10 +247,6 @@ def update_trader_details(trader_index, entity_type, entity_provider):
         df = get_entities(provider=entity_provider, entity_type=entity_type, entity_ids=entity_ids,
                           columns=['entity_id', 'code', 'name'],
                           index='entity_id')
-        entity_options = [{'label': f'{entity_id}({entity["name"]})', 'value': entity_id} for entity_id, entity in
-                          df.iterrows()]
-
-        return account_stats, entity_type_options, entity_provider_options, entity_options
     else:
         entity_type_options = [{'label': name, 'value': name} for name in zvt_context.tradable_schema_map.keys()]
         account_stats = None
@@ -225,9 +254,11 @@ def update_trader_details(trader_index, entity_type, entity_provider):
         entity_provider_options = [{'label': name, 'value': name} for name in providers]
         df = get_entities(provider=entity_provider, entity_type=entity_type, columns=['entity_id', 'code', 'name'],
                           index='entity_id')
-        entity_options = [{'label': f'{entity_id}({entity["name"]})', 'value': entity_id} for entity_id, entity in
-                          df.iterrows()]
-        return account_stats, entity_type_options, entity_provider_options, entity_options
+
+    entity_options = [{'label': f'{entity_id}({entity["name"]})', 'value': entity_id} for entity_id, entity in
+                      df.iterrows()]
+
+    return account_stats, entity_type_options, entity_provider_options, entity_options
 
 
 @zvt_app.callback(
@@ -288,21 +319,16 @@ def update_factor_details(factor, entity_type, entity, levels, columns, trader_i
 
         if type(levels) is list and len(levels) >= 2:
             levels.sort()
-            drawers = []
-            for level in levels:
-                drawers.append(zvt_context.factor_cls_registry[factor](
+            drawers = [zvt_context.factor_cls_registry[factor](
                     entity_schema=zvt_context.tradable_schema_map[entity_type],
-                    level=level, entity_ids=[entity]).drawer())
+                    level=level, entity_ids=[entity]).drawer() for level in levels]
             stacked = StackedDrawer(*drawers)
 
             return dcc.Graph(
                 id=f'{factor}-{entity_type}-{entity}',
                 figure=stacked.draw_kline(show=False, height=900))
         else:
-            if type(levels) is list:
-                level = levels[0]
-            else:
-                level = levels
+            level = levels[0] if type(levels) is list else levels
             drawer = zvt_context.factor_cls_registry[factor](entity_schema=zvt_context.tradable_schema_map[entity_type],
                                                              level=level,
                                                              entity_ids=[entity],
